@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment variables / API keys
+.env
+
+# Local memory
+memories/chats/*
+!memories/chats/.gitkeep
+# Audio / generated files
+*.mp3
+*.wav
+
+# OS/editor files
+.vscode/
+.DS_Store
