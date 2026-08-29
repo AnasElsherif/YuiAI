@@ -1,7 +1,9 @@
 from google import genai
 import time
 import subprocess
+from datetime import datetime
 import sounddevice as sd
+from ddgs import DDGS
 import requests
 from google.genai import types
 import os
@@ -98,7 +100,8 @@ the save_core_memory tool.
 Use it when:
 - the user explicitly asks you to remember something.
 - You learn a stable preference or fact that will help
-  future conversations.
+  future conversations. This includes things like the user's
+  name, age, interests, preferences, or habits.
 - An important long-term project, goal, or decision is established.
 
 Do NOT save:
@@ -109,6 +112,26 @@ Do NOT save:
 - Sensitive information unless explicitly requested
 
 Keep memories concise.
+
+OTHER TOOLS:
+
+WEB SEARCH:
+Use search_web when the user asks about current events, facts you are
+unsure about, or anything that benefits from an up-to-date answer.
+Do not announce that you are searching. Just do it and respond naturally.
+
+DATE AND TIME:
+Use get_datetime when the user asks about the current time or date,
+or when knowing the date is relevant to your response.
+
+SCREENSHOT:
+Use take_screenshot only when the user asks you to look at their screen,
+or when it is clearly necessary to answer their question.
+
+FILE BROWSER:
+Use list_files when the user asks about files in a folder, or when
+you need to inspect the filesystem to answer a question.
+Always use the exact path provided by the user.
 """
 
 
@@ -127,6 +150,27 @@ messages.extend(
 # ============================================================
 # TOOLS
 # ============================================================
+
+search_web_tool = types.FunctionDeclaration(
+    name="search_web",
+    description="""
+Search the web using DuckDuckGo.
+
+Use this when the user asks about current information,
+recent events, websites, facts you are unsure about, or
+anything that requires an internet search.
+""",
+    parameters=types.Schema(
+        type="OBJECT",
+        properties={
+            "query": types.Schema(
+                type="STRING",
+                description="The web search query."
+            )
+        },
+        required=["query"]
+    )
+)
 
 save_core_memory_tool = types.FunctionDeclaration(
     name="save_core_memory",
@@ -223,11 +267,35 @@ Do not load memories unnecessarily.
         required=["name"]
     )
 )
-
+get_datetime_tool = types.FunctionDeclaration(
+    name="get_datetime",
+    description="Get the user's current local date and time."
+)
 
 # ============================================================
 # FILE TOOL
 # ============================================================
+
+
+def search_web(query):
+
+    print("used tool: search_web:", query)
+
+    results = DDGS().text(
+        query,
+        max_results=5
+    )
+
+    return {
+        "results": [
+            {
+                "title": r["title"],
+                "url": r["href"],
+                "snippet": r["body"]
+            }
+            for r in results
+        ]
+    }
 
 def save_core_memory(memory):
     with open("core_memory.txt", "a", encoding="utf-8") as f:
@@ -251,11 +319,20 @@ def list_files(path_str):
 
     for file in folder.iterdir():
 
-        if file.is_file():
+        if file.is_file() or file.is_dir():
             files.append(str(file))
 
     return files
 
+def get_datetime():
+    now = datetime.now()
+
+    return {
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "day": now.strftime("%A"),
+        "timezone": "Asia/Kuwait"
+    }
 
 # ============================================================
 # TOOL HANDLER
@@ -316,6 +393,13 @@ def do_tool_pls(tool_name, tool_arg):
     if tool_name == "save_core_memory":
         print("used tool: save_core_memory")
         return save_core_memory(tool_arg["memory"])
+    if tool_name == "search_web":
+        return search_web(
+            tool_arg["query"]
+        )
+    if tool_name == "get_datetime":
+        print("used tool: get_datetime")
+        return get_datetime()
 # ============================================================
 # TEXT TO SPEECH
 # ============================================================
@@ -403,6 +487,8 @@ tools = types.Tool(
         list_files_tool,
         take_screenshot_tool,
         save_core_memory_tool,
+        search_web_tool,
+        get_datetime_tool,
     ]
 )
 
@@ -413,7 +499,7 @@ tools = types.Tool(
 
 while True:
 
-    msg = input("user: ")
+    msg = input("\033[91m"+"user: "+"\033[0m")
 
 
     if msg.lower() == "exit":
@@ -556,7 +642,7 @@ while True:
 
 
         print(
-            "yui: " + response.text
+            "\033[96m"+"yui: " +"\033[0m"+ response.text
         )
 
 
