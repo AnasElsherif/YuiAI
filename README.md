@@ -14,6 +14,7 @@ Currently tested on Linux with Python 3.14.
 - Customizable personality and behavior
 - Core memory that Yui can update herself
 - Function calling for tools
+- Web search
 - File system access through tools
 - Screenshot capture
 - Text-to-speech using Unreal Speech
@@ -27,6 +28,7 @@ Currently tested on Linux with Python 3.14.
 - Unreal Speech API key
 - ffmpeg
 - mpv
+- grim (for screenshots)
 
 ## Setup
 
@@ -69,9 +71,9 @@ This controls things such as her communication style, behavior, rules, and how s
 
 Contains Yui's long-term core memory.
 
-This is intended for information that Yui considers important enough to remember across conversations.
+This is intended for information that Yui considers important enough to remember across conversations, such as the user's name, preferences, ongoing projects, or other stable facts.
 
-Yui can also update this file through her memory tool.
+Yui can also update this file herself using the save_core_memory tool.
 
 ### memories/
 
@@ -112,13 +114,13 @@ Yui has two different types of memory.
 
 Conversations are automatically saved and can be loaded later when Yui needs information from a previous conversation.
 
-Yui can decide when an archived conversation is relevant instead of loading every conversation.
+Yui decides when an archived conversation is relevant instead of loading every conversation automatically.
 
 ### Core Memory
 
 Core memory is intended for information that should remain important across conversations.
 
-For example, Yui may decide that something about her personality, preferences, or an important interaction should be remembered.
+This includes things like the user's name, age, preferences, ongoing projects, or any fact worth remembering long-term.
 
 Core memory is stored in:
 
@@ -130,6 +132,9 @@ Yui currently has access to several tools:
 
 - list_memories — Lists available archived conversations.
 - load_memory — Loads a specific archived conversation.
+- save_core_memory — Saves an important fact to core memory.
+- search_web — Searches the web using DuckDuckGo.
+- get_datetime — Gets the current local date and time.
 - list_files — Lists files in a specified directory.
 - take_screenshot — Takes a screenshot of the current screen.
 
